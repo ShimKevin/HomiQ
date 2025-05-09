@@ -146,46 +146,79 @@ def place_order():
         logger.info(f"Received order data: {data}")
         order_number = datetime.now().strftime("%Y%m%d%H%M%S")
 
+        # Build itemized order list with quantities and prices
         order_items_text = "\n".join(
-            f"{item['title']} x {item['quantity']}: KSh {item['total']:,}"
+            f"{item['title']} x {item['quantity']} @ KSh {item['price']:,} = KSh {item['total']:,}"
             for item in data['orderItems']
         )
 
         order_summary = f"""
         ORDER #{order_number}
         ======================
+        Customer Details:
         Name: {data['name']}
         Phone: {data['phone']}
         Email: {data.get('email', 'Not provided')}
-        Location: {data['deliveryLocation']}
-        Address: {data['address']}
-        Notes: {data['notes']}
+        Delivery Location: {data['deliveryLocation']}
+        Delivery Address: {data['address']}
+        Customer Notes: {data['notes']}
+        
+        Order Items:
         ----------------------
         {order_items_text}
         ----------------------
         Subtotal: KSh {data['subtotal']:,}
-        Delivery: KSh {data['deliveryFee']:,}
+        + Delivery Fee: KSh {data['deliveryFee']:,}
+        ----------------------
         TOTAL: KSh {data['total']:,}
-        Payment: {data['paymentMethod']} - {data['paymentDetails']}
-        Time: {datetime.now().strftime("%Y-%m-%d %H:%M:%S")}
+        
+        Payment Method:
+        {data['paymentMethod']} - {data['paymentDetails']}
+        
+        Order Time: {datetime.now().strftime("%Y-%m-%d %H:%M:%S")}
         """
 
+        # HTML version for customer email
         order_summary_html = f"""
         <h2>ORDER #{order_number}</h2>
+        <h3>Customer Details</h3>
         <p><strong>Name:</strong> {data['name']}</p>
         <p><strong>Phone:</strong> {data['phone']}</p>
         <p><strong>Email:</strong> {data.get('email', 'Not provided')}</p>
-        <p><strong>Location:</strong> {data['deliveryLocation']}</p>
-        <p><strong>Address:</strong> {data['address']}</p>
+        <p><strong>Delivery Location:</strong> {data['deliveryLocation']}</p>
+        <p><strong>Delivery Address:</strong> {data['address']}</p>
         <p><strong>Notes:</strong> {data['notes']}</p>
+        
+        <h3>Order Items</h3>
         <ul>
-            {"".join(f"<li>{item['title']} x {item['quantity']}: KSh {item['total']:,}</li>" for item in data['orderItems'])}
+            {"".join(
+                f"<li>{item['title']} x {item['quantity']} @ KSh {item['price']:,} = KSh {item['total']:,}</li>" 
+                for item in data['orderItems']
+            )}
         </ul>
-        <p><strong>Total:</strong> KSh {data['total']:,}</p>
-        <p>Payment: {data['paymentMethod']} - {data['paymentDetails']}</p>
-        <p>Time: {datetime.now().strftime("%Y-%m-%d %H:%M:%S")}</p>
+        
+        <table style="width: 100%; border-top: 1px solid #eee; margin: 15px 0;">
+            <tr>
+                <td style="padding: 5px 0;"><strong>Subtotal:</strong></td>
+                <td style="text-align: right;">KSh {data['subtotal']:,}</td>
+            </tr>
+            <tr>
+                <td style="padding: 5px 0;"><strong>Delivery Fee:</strong></td>
+                <td style="text-align: right;">KSh {data['deliveryFee']:,}</td>
+            </tr>
+            <tr style="border-top: 1px solid #eee;">
+                <td style="padding: 5px 0;"><strong>TOTAL:</strong></td>
+                <td style="text-align: right;"><strong>KSh {data['total']:,}</strong></td>
+            </tr>
+        </table>
+        
+        <h3>Payment Method</h3>
+        <p>{data['paymentMethod']} - {data['paymentDetails']}</p>
+        
+        <p>Order Time: {datetime.now().strftime("%Y-%m-%d %H:%M:%S")}</p>
         """
 
+        # Send email to admin
         admin_msg = Message(
             subject=f"New Order #{order_number} from {data['name']}",
             recipients=['kevinshimanjala@gmail.com'],
@@ -193,6 +226,7 @@ def place_order():
         )
         mail.send(admin_msg)
 
+        # Send email to customer if email provided
         if data.get('email'):
             customer_msg = Message(
                 subject=f"Your HomiQ Essentials Order #{order_number}",
