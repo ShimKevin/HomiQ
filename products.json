@@ -1,0 +1,42 @@
+[
+  {
+    "id": 1,
+    "title": "solar light",
+    "description": "300W",
+    "price": 3000.0,
+    "original_price": 3500.0,
+    "image": "/static/uploads/IMG-20250505-WA00041.jpg",
+    "video": "",
+    "created_at": "2025-05-08T12:51:42.513695"
+  },
+  {
+    "id": 2,
+    "title": "Blender",
+    "description": "Silver Crest Blender-2 in one",
+    "price": 6500.0,
+    "original_price": 7500.0,
+    "image": "/static/uploads/11.jpg",
+    "video": "",
+    "created_at": "2025-05-08T13:34:05.223298"
+  },
+  {
+    "id": 3,
+    "title": "Solar Light",
+    "description": "3000W",
+    "price": 7500.0,
+    "original_price": 9000.0,
+    "image": "/static/uploads/IMG-20250505-WA00011.jpg",
+    "video": "",
+    "created_at": "2025-05-08T14:33:33.207240"
+  },
+  {
+    "id": 6,
+    "title": "SolarLight",
+    "description": "300W",
+    "price": 4500.0,
+    "original_price": 5000.0,
+    "image": "/static/uploads/IMG-20250508-WA00021.jpg",
+    "video": "",
+    "created_at": "2025-05-09T21:04:40.559828"
+  }
+]

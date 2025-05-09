@@ -1,0 +1,505 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HomiQ Essentials - Premium Home Goods</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+    <!-- Header Section -->
+    <header>
+        <div class="container">
+            <div class="header-content">
+                <div class="logo">Homi<span>Q</span></div>
+                <div class="search-bar">
+                    <input type="text" placeholder="Search products...">
+                </div>
+                <div class="cart-icon" id="cart-icon">
+                    <i class="fas fa-shopping-cart"></i>
+                    <span class="cart-count" id="cart-count">0</span>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Hero Section -->
+    <section class="hero">
+        <h1>Premium Home Essentials</h1>
+        <p>Elevate your living space with our stylish collection</p>
+        <div class="discount-badge">Big Discounts</div>
+    </section>
+
+    <!-- Products Section -->
+    <div class="container">
+        <section class="products" id="products-container">
+            <!-- Products will be loaded dynamically here -->
+        </section>
+    </div>
+
+    <!-- Cart Overlay -->
+    <div class="cart-overlay" id="cart-overlay">
+        <div class="cart-header">
+            <h2>Your Cart</h2>
+            <span class="close-cart" id="close-cart"><i class="fas fa-times"></i></span>
+        </div>
+        
+        <div class="cart-items" id="cart-items">
+            <p id="empty-cart-message">Your cart is empty</p>
+        </div>
+        
+        <div class="cart-total">
+            Total: <span id="cart-total">KSh 0</span>
+        </div>
+        
+        <div class="checkout-form">
+            <div class="thank-you-message" id="thank-you-message">
+                <h2>Thank You For Your Order!</h2>
+                <p>Your order has been received and we'll contact you shortly to confirm delivery.</p>
+                <p>You'll be redirected back to our homepage in a few seconds.</p>
+            </div>
+            
+            <div id="order-form">
+                <h3>Customer Information</h3>
+                <div class="form-group">
+                    <label for="name">Full Name</label>
+                    <input type="text" id="name" required>
+                </div>
+                <div class="form-group">
+                    <label for="phone">Phone Number</label>
+                    <input type="tel" id="phone" required>
+                </div>
+                <div class="form-group">
+                    <label for="email">Email (Optional)</label>
+                    <input type="email" id="email">
+                </div>
+                <div class="form-group">
+                    <label for="location">Delivery Location</label>
+                    <select id="location" required>
+                        <option value="">Select location</option>
+                        <option value="nairobi">Within Nairobi (KSh 200)</option>
+                        <option value="outside">Outside Nairobi (KSh 300)</option>
+                        <option value="cbd">Nairobi CBD (Free Delivery)</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="address">Delivery Address</label>
+                    <textarea id="address" rows="3" required></textarea>
+                </div>
+                <div class="form-group">
+                    <label for="notes">Additional Notes</label>
+                    <textarea id="notes" rows="2"></textarea>
+                </div>
+                
+                <div class="payment-info">
+                    <h3>Payment Information</h3>
+                    <p>Pay on delivery via M-Pesa:</p>
+                    <p><strong>Till Number:</strong> 123123</p>
+                    <p><strong>Paybill:</strong> 12341234</p>
+                    <p>Our team will contact you to confirm your order.</p>
+                </div>
+                
+                <button class="checkout-btn" id="checkout-btn">Place Order</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer Section -->
+    <div class="footer-sections">
+        <div class="footer-section social-section">
+            <h3>Connect With Us</h3>
+            <div class="social-media">
+                <a href="https://facebook.com/homiqessentials" class="social-icon facebook" target="_blank">
+                    <i class="fab fa-facebook-f"></i>
+                </a>
+                <a href="https://instagram.com/homiqessentials" class="social-icon instagram" target="_blank">
+                    <i class="fab fa-instagram"></i>
+                </a>
+                <a href="https://wa.me/254712345678" class="social-icon whatsapp" target="_blank">
+                    <i class="fab fa-whatsapp"></i>
+                </a>
+            </div>
+        </div>
+        
+        <div class="footer-section contact-section">
+            <h3>Contact Us</h3>
+            <a href="tel:+254712345678" class="phone-link">
+                <span class="call-icon"><i class="fas fa-phone"></i></span>
+                <span>0712 345 678</span>
+            </a>
+            <a href="tel:+254798765432" class="phone-link">
+                <span class="call-icon"><i class="fas fa-phone"></i></span>
+                <span>0798 765 432</span>
+            </a>
+            <p><i class="fas fa-map-marker-alt"></i> Superior Arcade, Shop 223, 2nd Floor, Nairobi</p>
+            <p><i class="fas fa-truck"></i> Delivery: KSh 200 (Nairobi), KSh 300 (Outside Nairobi)</p>
+        </div>
+        
+        <div class="footer-section rights-section">
+            <p>&copy; 2025 HomiQ Essentials. All rights reserved.</p>
+            <p>Premium home goods for elegant living</p>
+        </div>
+    </div>
+
+    <!-- Admin Link -->
+    <a href="/admin/login" class="admin-link" title="Admin Panel">
+        <i class="fas fa-lock"></i>
+    </a>
+
+    <!-- Scripts -->
+    <script src="https://cdn.socket.io/4.5.4/socket.io.min.js"></script>
+    <script>
+        // Global state
+        let cart = [];
+        let products = [];
+        let socket;
+
+        // DOM elements
+        const productsContainer = document.getElementById('products-container');
+        const cartIcon = document.getElementById('cart-icon');
+        const cartOverlay = document.getElementById('cart-overlay');
+        const closeCart = document.getElementById('close-cart');
+        const cartItemsContainer = document.getElementById('cart-items');
+        const cartTotal = document.getElementById('cart-total');
+        const cartCount = document.getElementById('cart-count');
+        const emptyCartMessage = document.getElementById('empty-cart-message');
+        const checkoutBtn = document.getElementById('checkout-btn');
+        const orderForm = document.getElementById('order-form');
+        const thankYouMessage = document.getElementById('thank-you-message');
+
+        // Initialize WebSocket connection
+        function initWebSocket() {
+            socket = io({
+                reconnection: true,
+                reconnectionAttempts: 5,
+                reconnectionDelay: 1000
+            });
+
+            socket.on('connect', () => {
+                console.log('Connected to WebSocket');
+            });
+
+            socket.on('product_update', (data) => {
+                console.log('Product update received:', data);
+                if (data.action === 'add') {
+                    const product = formatProductData(data.product);
+                    if (!products.some(p => p.id === product.id)) {
+                        addProductToPage(product, true);
+                    }
+                }
+            });
+
+            socket.on('disconnect', () => {
+                console.log('Disconnected from WebSocket');
+            });
+        }
+
+        // Format product data consistently
+        function formatProductData(product) {
+            return {
+                id: product.id,
+                title: product.title,
+                description: product.description || '',
+                price: product.price,
+                originalPrice: product.original_price || product.originalPrice || product.price,
+                image: product.image.startsWith('/') ? product.image : `/${product.image}`,
+                discountPercentage: product.original_price > product.price ? 
+                    Math.round((product.original_price - product.price) / product.original_price * 100) : 0
+            };
+        }
+
+        // Fetch products from API or use fallback
+        async function fetchProducts() {
+            try {
+                const response = await fetch('/api/products');
+                if (response.ok) {
+                    const products = await response.json();
+                    return products.map(formatProductData);
+                }
+            } catch (error) {
+                console.error("Failed to fetch products:", error);
+                return getFallbackProducts();
+            }
+        }
+
+        function getFallbackProducts() {
+            return [
+                { 
+                    id: 1, 
+                    title: "Solar Light", 
+                    description: "300W Solar Panel", 
+                    price: 1500, 
+                    originalPrice: 2000,
+                    image: "/static/uploads/IMG-20250505-WA00041.jpg" 
+                },
+                // ... other fallback products ...
+            ];
+        }
+
+        // Display products with lazy loading
+        async function displayProducts() {
+            products = await fetchProducts();
+            productsContainer.innerHTML = '';
+            
+            products.forEach(product => {
+                addProductToPage(product, false);
+            });
+            
+            document.querySelectorAll('.order-now').forEach(btn => {
+                btn.addEventListener('click', addToCart);
+            });
+            
+            lazyLoadImages();
+        }
+
+        // Add product to page (prepend for new WS products)
+        function addProductToPage(product, prepend = true) {
+            const discount = product.discountPercentage || 
+                          (product.originalPrice > product.price ? 
+                           Math.round((product.originalPrice - product.price) / product.originalPrice * 100) : 0);
+            
+            const productElement = document.createElement('div');
+            productElement.className = `product-card ${discount > 0 ? 'has-discount' : ''}`;
+            productElement.innerHTML = `
+                <div class="product-image-container">
+                    <img src="${product.image}" 
+                         alt="${product.title}" 
+                         class="product-image lazy-load" 
+                         data-src="${product.image}"
+                         onload="this.classList.add('loaded')"
+                         onerror="this.onerror=null;this.src='/static/images/placeholder.jpg'">
+                    ${discount > 0 ? `<div class="product-discount">${discount}% OFF</div>` : ''}
+                </div>
+                <div class="product-info">
+                    <h3 class="product-title">${product.title}</h3>
+                    <p class="product-description">${product.description}</p>
+                    <div class="product-price">
+                        <span class="current-price">KSh ${product.price.toLocaleString()}</span>
+                        ${discount > 0 ? 
+                          `<span class="original-price">KSh ${product.originalPrice.toLocaleString()}</span>` : ''}
+                    </div>
+                    <button class="order-now" data-id="${product.id}">Order Now</button>
+                </div>
+            `;
+            
+            if (prepend) {
+                productsContainer.insertBefore(productElement, productsContainer.firstChild);
+                products.unshift(product);
+            } else {
+                productsContainer.appendChild(productElement);
+                products.push(product);
+            }
+            
+            productElement.querySelector('.order-now').addEventListener('click', addToCart);
+        }
+
+        // Lazy load images
+        function lazyLoadImages() {
+            const lazyImages = document.querySelectorAll('.product-image.lazy-load:not(.loaded)');
+            const observer = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        const img = entry.target;
+                        img.src = img.dataset.src;
+                        img.classList.add('loaded');
+                        observer.unobserve(img);
+                    }
+                });
+            });
+            lazyImages.forEach(img => observer.observe(img));
+        }
+
+        // Cart functions (unchanged from your original)
+        function addToCart(e) {
+            const productId = parseInt(e.target.getAttribute('data-id'));
+            const product = products.find(p => p.id === productId);
+            
+            const existingItem = cart.find(item => item.id === productId);
+            
+            if (existingItem) {
+                existingItem.quantity += 1;
+            } else {
+                cart.push({
+                    ...product,
+                    quantity: 1
+                });
+            }
+            
+            updateCart();
+            cartOverlay.classList.add('active');
+        }
+
+        function updateCart() {
+            const totalItems = cart.reduce((total, item) => total + item.quantity, 0);
+            cartCount.textContent = totalItems;
+            cartItemsContainer.innerHTML = '';
+            
+            if (cart.length === 0) {
+                emptyCartMessage.style.display = 'block';
+                cartTotal.textContent = 'KSh 0';
+                return;
+            }
+            
+            emptyCartMessage.style.display = 'none';
+            let total = 0;
+            
+            cart.forEach(item => {
+                const itemTotal = item.price * item.quantity;
+                total += itemTotal;
+                
+                const cartItemElement = document.createElement('div');
+                cartItemElement.className = 'cart-item';
+                cartItemElement.innerHTML = `
+                    <img src="${item.image}" alt="${item.title}" class="cart-item-image">
+                    <div class="cart-item-details">
+                        <h4 class="cart-item-title">${item.title}</h4>
+                        <p class="cart-item-price">KSh ${item.price.toLocaleString()}</p>
+                        <div class="cart-item-quantity">
+                            <button class="quantity-btn decrease" data-id="${item.id}">-</button>
+                            <span class="quantity">${item.quantity}</span>
+                            <button class="quantity-btn increase" data-id="${item.id}">+</button>
+                        </div>
+                        <span class="remove-item" data-id="${item.id}">Remove</span>
+                    </div>
+                `;
+                
+                cartItemsContainer.appendChild(cartItemElement);
+            });
+            
+            cartTotal.textContent = `KSh ${total.toLocaleString()}`;
+            
+            document.querySelectorAll('.decrease').forEach(btn => {
+                btn.addEventListener('click', decreaseQuantity);
+            });
+            
+            document.querySelectorAll('.increase').forEach(btn => {
+                btn.addEventListener('click', increaseQuantity);
+            });
+            
+            document.querySelectorAll('.remove-item').forEach(btn => {
+                btn.addEventListener('click', removeItem);
+            });
+        }
+
+        function decreaseQuantity(e) {
+            const productId = parseInt(e.target.getAttribute('data-id'));
+            const item = cart.find(item => item.id === productId);
+            
+            if (item.quantity > 1) {
+                item.quantity -= 1;
+            } else {
+                cart = cart.filter(item => item.id !== productId);
+            }
+            
+            updateCart();
+        }
+
+        function increaseQuantity(e) {
+            const productId = parseInt(e.target.getAttribute('data-id'));
+            const item = cart.find(item => item.id === productId);
+            item.quantity += 1;
+            updateCart();
+        }
+
+        function removeItem(e) {
+            const productId = parseInt(e.target.getAttribute('data-id'));
+            cart = cart.filter(item => item.id !== productId);
+            updateCart();
+        }
+
+        // Checkout function (unchanged from your original)
+        async function checkout() {
+            const name = document.getElementById('name').value;
+            const phone = document.getElementById('phone').value;
+            const email = document.getElementById('email').value;
+            const location = document.getElementById('location').value;
+            const locationText = document.getElementById('location').options[document.getElementById('location').selectedIndex].text;
+            const address = document.getElementById('address').value;
+            const notes = document.getElementById('notes').value;
+            
+            if (!name || !phone || !location || !address) {
+                alert('Please fill in all required fields');
+                return;
+            }
+            
+            let deliveryFee = location === 'nairobi' ? 200 : 
+                            location === 'outside' ? 300 : 0;
+            
+            const subtotal = cart.reduce((total, item) => total + (item.price * item.quantity), 0);
+            const total = subtotal + deliveryFee;
+            
+            const orderData = {
+                name: name,
+                phone: phone,
+                email: email,
+                deliveryLocation: locationText,
+                address: address,
+                notes: notes,
+                orderItems: cart.map(item => ({
+                    title: item.title,
+                    quantity: item.quantity,
+                    price: item.price,
+                    total: item.price * item.quantity
+                })),
+                subtotal: subtotal,
+                deliveryFee: deliveryFee,
+                total: total,
+                paymentMethod: "Pay on Delivery",
+                paymentDetails: "M-Pesa Till: 123123 or Paybill: 12341234"
+            };
+            
+            try {
+                checkoutBtn.disabled = true;
+                checkoutBtn.textContent = 'Processing...';
+                
+                const response = await fetch('/place-order', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(orderData)
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    orderForm.style.display = 'none';
+                    thankYouMessage.style.display = 'block';
+                    cart = [];
+                    updateCart();
+                    
+                    setTimeout(() => {
+                        window.location.href = '/';
+                    }, 5000);
+                } else {
+                    alert('Error: ' + result.message);
+                    checkoutBtn.disabled = false;
+                    checkoutBtn.textContent = 'Place Order';
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                alert('Order processing failed. Please try again.');
+                checkoutBtn.disabled = false;
+                checkoutBtn.textContent = 'Place Order';
+            }
+        }
+
+        // Initialize everything
+        document.addEventListener('DOMContentLoaded', () => {
+            displayProducts();
+            initWebSocket();
+            
+            cartIcon.addEventListener('click', () => {
+                cartOverlay.classList.add('active');
+            });
+            
+            closeCart.addEventListener('click', () => {
+                cartOverlay.classList.remove('active');
+            });
+            
+            checkoutBtn.addEventListener('click', checkout);
+        });
+    </script>
+</body>
+</html>
